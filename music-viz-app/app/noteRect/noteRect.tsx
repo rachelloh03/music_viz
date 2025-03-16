@@ -1,8 +1,6 @@
 import { useRef } from "react";
 import type { Note } from "../note/note";
 
-// test github commits again
-
 const NoteRect = (note: Note) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const midi = note.midi;
