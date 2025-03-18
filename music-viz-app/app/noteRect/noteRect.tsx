@@ -1,6 +1,11 @@
 import { useRef } from "react";
 import type { Note } from "../note/note";
 
+// rename to drawNoteRect
+// doesn't have animation, just draws based on curTime
+// becomes a ts file because we're not returning an object
+// just a function that draws the noteRect on the global canvas
+
 const NoteRect = (note: Note) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const midi = note.midi;
