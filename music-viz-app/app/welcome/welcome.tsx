@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import Staff from "../staff/staff";
+import { drawStaff } from "../drawStaff/drawStaff";
 import type { Note } from "../note/note";
-// import NoteRect from "../noteRect/noteRect";
+import { drawNote } from "../drawNote/drawNote";
 
 export const Welcome = () => {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -10,16 +10,43 @@ export const Welcome = () => {
   const midiVals = [60, 62, 64, 65, 67, 69, 71, 72, 74, 76];
   const [keysDown, setKeysDown] = useState<number[]>([]);
 
-  // create a global canvas associated with a single staff and its notes
-  // make it its own folder
-  // draw staff object onto the canvas that's passed in
-  // draw noteRects onto the canvas
-  // Date.now() only gets called once at the top
-  // useEffect to call requestAnimationFrame and setCurTime
-  // display the time on the app
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  let canvas: HTMLCanvasElement | null;
 
+  // run once on render
+  useEffect(() => {
+    // create canvas object
+    canvas = canvasRef.current;
+    if (!canvas) {
+      return;
+    }
+
+    // draw staff
+    drawStaff(canvas);
+  }, []);
+
+  // continuously update curTime
+  useEffect(() => {
+    let animId: number;
+    const updateTime = () => {
+      setCurTime(Date.now());
+      animId = requestAnimationFrame(updateTime);
+    };
+
+    updateTime();
+    return () => cancelAnimationFrame(animId);
+  }, []);
+
+  // draw notes
+  useEffect(() => {
+    canvas = canvasRef.current;
+    if (canvas !== null) {
+      notes.forEach((note) => drawNote(canvas!, note, curTime));
+    }
+  }, [notes.length]);
+
+  // detect when note is played (noteOn)
   const handleKeyDown = (event: { key: string }) => {
-    // noteOn
     let key = 0;
     try {
       key = parseInt(event.key);
@@ -44,8 +71,8 @@ export const Welcome = () => {
     }
   };
 
+  // detect when note ends (noteOff)
   const handleKeyUp = (event: { key: string }) => {
-    // noteOff
     let key = 0;
     try {
       key = parseInt(event.key);
@@ -92,9 +119,12 @@ export const Welcome = () => {
     <main className="flex items-center justify-center pt-16 pb-4">
       <div>
         <h1>Music Visualization App</h1>
-        <div>
-          <Staff />
-        </div>
+        {/* <p>{new Date(curTime).toString()}</p> */}
+        <canvas
+          ref={canvasRef}
+          width="800"
+          style={{ border: "1px solid black" }}
+        />
       </div>
     </main>
   );
