@@ -11,29 +11,37 @@ export const drawNote = (
     return;
   }
 
+  const key = note.key;
   const midi = note.midi;
   const startTime = note.startTime;
   const endTime = note.endTime;
   const staffY = canvas.height * 0.3;
 
-  const speed = 2;
+  const speed = 1;
   const lineSpacing = (canvas.height * 0.5) / 5;
   let noteWidth: number;
 
   if (!endTime) {
-    console.log("heyoooo");
-    noteWidth = (curTime - startTime) * speed;
+    noteWidth = ((curTime - startTime) / 5000) * canvas.width * speed;
   } else {
-    console.log("should be false: ", endTime < startTime);
-    noteWidth = (endTime - startTime) * speed;
+    noteWidth = ((endTime - startTime) / 5000) * canvas.width * speed;
   }
 
-  console.log(noteWidth);
-
   const x = canvas.width - noteWidth;
-  const y = staffY + (lineSpacing / 4) * (midi - 60) - lineSpacing;
-  console.log("x, y:", x, ",", y);
-
+  let y;
+  if (key == 0) {
+    y =
+      canvas.height * 0.3 +
+      4 * lineSpacing +
+      ((3 - 10) * lineSpacing) / 2 -
+      (lineSpacing * 0.7) / 2;
+  } else {
+    y =
+      canvas.height * 0.3 +
+      4 * lineSpacing +
+      ((3 - key) * lineSpacing) / 2 -
+      (lineSpacing * 0.7) / 2;
+  }
   ctx.fillStyle = "blue";
-  ctx.fillRect(x, y, noteWidth, lineSpacing);
+  ctx.fillRect(x, y, noteWidth, lineSpacing * 0.7);
 };

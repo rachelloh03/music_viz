@@ -59,8 +59,13 @@ export const Welcome = () => {
 
       // append new note to notesAndTime.notes and set midi and startTime
       if (keysDown.indexOf(key) === -1) {
-        const startTime = Date.now();
-        const newNote = { midi: midi, startTime: startTime, endTime: null };
+        const startTime = curTime;
+        const newNote = {
+          key: key,
+          midi: midi,
+          startTime: startTime,
+          endTime: null,
+        };
 
         setNotes((prevState) => [...prevState, newNote]);
         setKeysDown((prevState) => [...prevState, key]);
@@ -81,7 +86,7 @@ export const Welcome = () => {
         keysDownCopy.splice(keysDown.indexOf(key), 1);
         setKeysDown(keysDownCopy);
 
-        const endTime = Date.now();
+        const endTime = curTime;
         // for note in notes, if the midi value equals midi, then update its endTime
         for (let i = 0; i < notes.length; i++) {
           const note: Note = notes[i];

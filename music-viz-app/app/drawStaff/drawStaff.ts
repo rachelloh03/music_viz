@@ -4,8 +4,6 @@ export const drawStaff = (canvas: HTMLCanvasElement) => {
   const lineWidth = canvas.width;
   const staffY = canvas.height * 0.3;
 
-  console.log("canvas width: ", canvas.width);
-
   if (!ctx) {
     return;
   }
