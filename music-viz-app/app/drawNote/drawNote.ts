@@ -27,7 +27,9 @@ export const drawNote = (
     noteWidth = ((endTime - startTime) / 5000) * canvas.width * speed;
   }
 
-  const x = canvas.width - noteWidth;
+  const x =
+    canvas.width -
+    (((curTime - startTime) / 5000) * canvas.width * speed - noteWidth);
   console.log(x);
   let y;
   if (key == 0) {

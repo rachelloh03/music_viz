@@ -39,11 +39,26 @@ export const Welcome = () => {
 
   // draw notes
   useEffect(() => {
+    let animId: number;
     canvas = canvasRef.current;
-    if (canvas !== null) {
-      notes.forEach((note) => drawNote(canvas!, note, curTime));
-    }
-  }, [notes.length]);
+    // also need to clear the note
+    const animate = () => {
+      if (canvas !== null) {
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          return;
+        }
+        // ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // how to clear note without clearing entire staff?
+
+        // canvas! instead of canvas because we know canvas is not null
+        notes.forEach((note) => drawNote(canvas!, note, curTime));
+        animId = requestAnimationFrame(animate);
+      }
+    };
+    animate();
+    return () => cancelAnimationFrame(animId);
+  }, [notes]);
 
   // detect when note is played (noteOn)
   const handleKeyDown = (event: { key: string }) => {
