@@ -58,7 +58,7 @@ export const Welcome = () => {
     };
     animate();
     return () => cancelAnimationFrame(animId);
-  }, [notes]);
+  }, [notes, curTime]);
 
   // detect when note is played (noteOn)
   const handleKeyDown = (event: { key: string }) => {
@@ -133,7 +133,7 @@ export const Welcome = () => {
       document.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("keyup", handleKeyUp);
     };
-  }, [notes]);
+  }, [notes.length]);
 
   return (
     <main className="flex items-center justify-center pt-16 pb-4">
