@@ -12,7 +12,7 @@ export const drawNote = (
   }
 
   const key = note.key;
-  const midi = note.midi;
+  //   const midi = note.midi;
   const startTime = note.startTime;
   const endTime = note.endTime;
   const staffY = canvas.height * 0.3;
@@ -28,16 +28,17 @@ export const drawNote = (
   }
 
   const x = canvas.width - noteWidth;
+  console.log(x);
   let y;
   if (key == 0) {
     y =
-      canvas.height * 0.3 +
+      staffY +
       4 * lineSpacing +
       ((3 - 10) * lineSpacing) / 2 -
       (lineSpacing * 0.7) / 2;
   } else {
     y =
-      canvas.height * 0.3 +
+      staffY +
       4 * lineSpacing +
       ((3 - key) * lineSpacing) / 2 -
       (lineSpacing * 0.7) / 2;
