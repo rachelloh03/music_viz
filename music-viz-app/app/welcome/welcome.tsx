@@ -8,22 +8,9 @@ export const Welcome = () => {
   const [curTime, setCurTime] = useState(Date.now());
 
   const midiVals = [60, 62, 64, 65, 67, 69, 71, 72, 74, 76];
-  const [keysDown, setKeysDown] = useState<number[]>([]);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   let canvas: HTMLCanvasElement | null;
-
-  // run once on render
-  useEffect(() => {
-    // create canvas object
-    canvas = canvasRef.current;
-    if (!canvas) {
-      return;
-    }
-
-    // draw staff
-    drawStaff(canvas);
-  }, []);
 
   // continuously update curTime
   useEffect(() => {
@@ -37,31 +24,27 @@ export const Welcome = () => {
     return () => cancelAnimationFrame(animId);
   }, []);
 
-  // draw notes
+  // draw staff and notes
   useEffect(() => {
-    let animId: number;
     canvas = canvasRef.current;
-    // also need to clear the note
     const animate = () => {
       if (canvas !== null) {
         const ctx = canvas.getContext("2d");
         if (!ctx) {
           return;
         }
-        // ctx.clearRect(0, 0, canvas.width, canvas.height);
-        // how to clear note without clearing entire staff?
-
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawStaff(canvas);
         // canvas! instead of canvas because we know canvas is not null
         notes.forEach((note) => drawNote(canvas!, note, curTime));
-        animId = requestAnimationFrame(animate);
       }
     };
     animate();
-    return () => cancelAnimationFrame(animId);
   }, [notes, curTime]);
 
   // detect when note is played (noteOn)
-  const handleKeyDown = (event: { key: string }) => {
+  const handleKeyDown = (event: KeyboardEvent) => {
+    if (event.repeat) return; // prevent holding down on a key to be counted as multiple notes
     let key = 0;
     try {
       key = parseInt(event.key);
@@ -71,55 +54,45 @@ export const Welcome = () => {
       } else {
         midi = midiVals[key - 1];
       }
-
       // append new note to notesAndTime.notes and set midi and startTime
-      if (keysDown.indexOf(key) === -1) {
-        const startTime = curTime;
-        const newNote = {
-          key: key,
-          midi: midi,
-          startTime: startTime,
-          endTime: null,
-        };
+      const startTime = curTime;
+      const newNote = {
+        key: key,
+        midi: midi,
+        startTime: startTime,
+        endTime: null,
+      };
 
-        setNotes((prevState) => [...prevState, newNote]);
-        setKeysDown((prevState) => [...prevState, key]);
-      }
-      console.log(notes);
+      setNotes((prevState) => [...prevState, newNote]);
+      console.log("keydown: ", notes);
     } catch {
       console.log("key must be a number 0 through 9");
     }
   };
 
   // detect when note ends (noteOff)
-  const handleKeyUp = (event: { key: string }) => {
+  const handleKeyUp = (event: KeyboardEvent) => {
     let key = 0;
     try {
       key = parseInt(event.key);
-      if (keysDown.indexOf(key) !== -1) {
-        const keysDownCopy: number[] = [...keysDown];
-        keysDownCopy.splice(keysDown.indexOf(key), 1);
-        setKeysDown(keysDownCopy);
+      const endTime = curTime;
+      // for note in notes, if the midi value equals midi, then update its endTime
+      for (let i = 0; i < notes.length; i++) {
+        const note: Note = notes[i];
+        let midi;
+        if (key == 0) {
+          midi = 76;
+        } else {
+          midi = midiVals[key - 1];
+        }
+        if (note.midi === midi && note.endTime === null) {
+          const notesCopy: Note[] = [...notes];
+          note.endTime = endTime;
 
-        const endTime = curTime;
-        // for note in notes, if the midi value equals midi, then update its endTime
-        for (let i = 0; i < notes.length; i++) {
-          const note: Note = notes[i];
-          let midi;
-          if (key == 0) {
-            midi = 76;
-          } else {
-            midi = midiVals[key - 1];
-          }
-          if (note.midi === midi && note.endTime === null) {
-            const notesCopy: Note[] = [...notes];
-            note.endTime = endTime;
-
-            setNotes(notesCopy);
-          }
+          setNotes(notesCopy);
+          console.log("keyup: ", notes);
         }
       }
-      console.log(notes);
     } catch {
       console.log("key must be a number 0 through 9");
     }

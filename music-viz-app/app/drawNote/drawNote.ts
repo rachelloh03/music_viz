@@ -12,25 +12,24 @@ export const drawNote = (
   }
 
   const key = note.key;
-  //   const midi = note.midi;
   const startTime = note.startTime;
   const endTime = note.endTime;
   const staffY = canvas.height * 0.3;
 
-  const speed = 1;
+  const speed = 5;
   const lineSpacing = (canvas.height * 0.5) / 5;
   let noteWidth: number;
 
   if (!endTime) {
-    noteWidth = ((curTime - startTime) / 5000) * canvas.width * speed;
+    noteWidth = ((curTime - startTime) / 50000) * canvas.width * speed;
   } else {
-    noteWidth = ((endTime - startTime) / 5000) * canvas.width * speed;
+    noteWidth = ((endTime - startTime) / 50000) * canvas.width * speed;
   }
 
   const x =
     canvas.width -
-    (((curTime - startTime) / 5000) * canvas.width * speed - noteWidth);
-  console.log(x);
+    (((curTime - startTime) / 50000) * canvas.width * speed - noteWidth);
+
   let y;
   if (key == 0) {
     y =
