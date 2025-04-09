@@ -1,8 +1,7 @@
-export const drawStaff = (canvas: HTMLCanvasElement) => {
+export const drawStaff = (canvas: HTMLCanvasElement, staffY: number) => {
   const ctx = canvas.getContext("2d");
-  const lineSpacing = (canvas.height * 0.5) / 5;
+  const lineSpacing = (canvas.height * 0.2) / 5;
   const lineWidth = canvas.width;
-  const staffY = canvas.height * 0.3;
 
   if (!ctx) {
     return;

@@ -1,0 +1,16 @@
+export const fakeNotes = [
+  { pitch: 60, startTime: 1744170632966, endTime: 1744170633090 },
+  { pitch: 60, startTime: 1744170633498, endTime: 1744170633632 },
+  { pitch: 67, startTime: 1744170634007, endTime: 1744170634107 },
+  { pitch: 67, startTime: 1744170634441, endTime: 1744170634532 },
+  { pitch: 69, startTime: 1744170634908, endTime: 1744170634982 },
+  { pitch: 69, startTime: 1744170635341, endTime: 1744170635415 },
+  { pitch: 67, startTime: 1744170635791, endTime: 1744170636365 },
+  { pitch: 65, startTime: 1744170636707, endTime: 1744170636782 },
+  { pitch: 65, startTime: 1744170637090, endTime: 1744170637174 },
+  { pitch: 64, startTime: 1744170637474, endTime: 1744170637557 },
+  { pitch: 64, startTime: 1744170637881, endTime: 1744170637974 },
+  { pitch: 62, startTime: 1744170638298, endTime: 1744170638373 },
+  { pitch: 62, startTime: 1744170638740, endTime: 1744170638840 },
+  { pitch: 60, startTime: 1744170639239, endTime: 1744170639798 },
+];

@@ -1,6 +1,5 @@
 export interface Note {
-  key: number;
-  midi: number;
+  pitch: number;
   startTime: number;
   endTime: number | null;
 }
