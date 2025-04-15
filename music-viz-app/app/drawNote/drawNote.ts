@@ -28,9 +28,12 @@ export const drawNote = (
   const noteHeight = lineSpacing * 0.7;
 
   let y;
-  // key 1 corresponds to pitch 60
-  const pitchVals = [60, 62, 64, 65, 67, 69, 71, 72, 74, 76];
-  const key = pitchVals.findIndex((pitchVal) => pitchVal === pitch) + 1;
+  const pitchVals = [
+    40, 41, 43, 45, 47, 48, 50, 52, 53, 55, 57, 59, 60, 62, 64, 65, 67, 69, 71,
+    72, 74, 76, 77, 79, 81,
+  ];
+
+  const key = pitchVals.findIndex((pitchVal) => pitchVal === pitch) - 11;
   y = staffY + 4 * lineSpacing + ((3 - key) * lineSpacing - noteHeight) / 2;
   ctx.fillStyle = "blue";
   ctx.fillRect(x, y, noteWidth, lineSpacing * 0.7);

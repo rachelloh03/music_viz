@@ -11,9 +11,33 @@ export const Welcome = () => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [curTime, setCurTime] = useState(Date.now());
 
-  const pitchVals = [60, 62, 64, 65, 67, 69, 71, 72, 74, 76];
-
-  // 59, 57, 55, 53, 52, 50, 49
+  const keyToPitch: { [key: string]: number } = {
+    q: 40,
+    w: 41,
+    e: 43,
+    r: 45,
+    t: 47,
+    y: 48,
+    u: 50,
+    i: 52,
+    o: 53,
+    p: 55,
+    "[": 57,
+    "]": 59,
+    "1": 60,
+    "2": 62,
+    "3": 64,
+    "4": 65,
+    "5": 67,
+    "6": 69,
+    "7": 71,
+    "8": 72,
+    "9": 74,
+    "0": 76,
+    "-": 77,
+    "=": 79,
+    Backspace: 81,
+  };
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   let canvas: HTMLCanvasElement | null;
@@ -25,7 +49,6 @@ export const Welcome = () => {
       setCurTime(Date.now());
       animId = requestAnimationFrame(updateTime);
     };
-
     updateTime();
     return () => cancelAnimationFrame(animId);
   }, [setCurTime]);
@@ -42,7 +65,7 @@ export const Welcome = () => {
         }
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         drawStaff(canvas, canvas.height * 0.3); // treble staff
-        drawStaff(canvas, canvas.height * 0.55);
+        drawStaff(canvas, canvas.height * 0.54);
         // canvas! instead of canvas because we know canvas is not null
         notes.forEach((note) => drawNote(canvas!, note, curTime));
       }
@@ -114,9 +137,8 @@ export const Welcome = () => {
 
   // returns the corresponding pitch, given the key pressed
   const getPitch = (event: KeyboardEvent) => {
-    const key = parseInt(event.key);
-    const pitch = key === 0 ? 76 : pitchVals[key - 1];
-    return pitch;
+    const key = event.key;
+    return keyToPitch[key];
   };
 
   // returns the note corresponding to the pitch with null endTime
