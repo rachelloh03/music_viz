@@ -2,14 +2,15 @@ import { useState, useEffect, useRef } from "react";
 import { drawStaff } from "../drawStaff/drawStaff";
 import type { Note } from "../note/note";
 import { drawNote } from "../drawNote/drawNote";
-import { fakeNotes } from "../fakeData/fakeData";
+import { popper } from "../fakeData/popper";
+import { parseAttention } from "../parseAttention/parseAttention";
 
-// expand to grandStaff (bottom staff is bass, top staff is treble)
-// ledger lines, sharps, flats
+const attentions = parseAttention(); // for batch = layer = head = 0 of popper
 
 export const Welcome = () => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [curTime, setCurTime] = useState(Date.now());
+  const [zoom, setZoom] = useState(50);
 
   const keyToPitch: { [key: string]: number } = {
     q: 40,
@@ -67,7 +68,7 @@ export const Welcome = () => {
         drawStaff(canvas, canvas.height * 0.3); // treble staff
         drawStaff(canvas, canvas.height * 0.54);
         // canvas! instead of canvas because we know canvas is not null
-        notes.forEach((note) => drawNote(canvas!, note, curTime));
+        notes.forEach((note) => drawNote(canvas!, note, curTime, zoom));
       }
     };
     animate();
@@ -78,13 +79,13 @@ export const Welcome = () => {
     if (event.repeat) return; // prevent key repeat
     // play fake notes
     if (event.key == "f") {
-      const firstFakeStartTime = fakeNotes[0].startTime;
-      const newFakeNotes = fakeNotes.map((note) => {
+      const firstFakeStartTime = popper[0].startTime;
+      const newPopper = popper.map((note) => {
         note.startTime = curTime + note.startTime - firstFakeStartTime;
         note.endTime = curTime + note.endTime - firstFakeStartTime;
         return note;
       });
-      const newNotes = [...notes, ...newFakeNotes];
+      const newNotes = [...notes, ...newPopper];
       setNotes(newNotes);
     } else {
       try {
@@ -151,13 +152,24 @@ export const Welcome = () => {
     }
   };
 
+  // update zoom percentage
+  const handleZoomChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const zoomVal = Number(event.target.value);
+    setZoom(zoomVal);
+    console.log(zoomVal);
+  };
+
   return (
     <main className="flex items-center justify-center pt-16 pb-4">
       <div>
         <h1>Music Visualization App</h1>
         <h2>Press 0-9 to play notes C4-E5 respectively</h2>
         <h2>Press 'f' to play Twinkle Twinkle Little Star</h2>
+        <h2>*Chromatic notes are in red*</h2>
         {/* <p>{new Date(curTime).toString()}</p> */}
+        <h2>Slide to zoom in/out</h2>
+        <input type="range" onChange={handleZoomChange} />
+        <h2>{zoom}% zoom</h2>
         <canvas
           ref={canvasRef}
           width="800"
