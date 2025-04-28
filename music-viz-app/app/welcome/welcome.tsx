@@ -2,15 +2,28 @@ import { useState, useEffect, useRef } from "react";
 import { drawStaff } from "../drawStaff/drawStaff";
 import type { Note } from "../note/note";
 import { drawNote } from "../drawNote/drawNote";
+import { drawArc } from "../drawArc/drawArc";
 import { popper } from "../fakeData/popper";
-import { parseAttention } from "../parseAttention/parseAttention";
-
-const attentions = parseAttention(); // for batch = layer = head = 0 of popper
 
 export const Welcome = () => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [curTime, setCurTime] = useState(Date.now());
   const [zoom, setZoom] = useState(50);
+  const [arcThresh, setArcThresh] = useState(0.00017043838); // change later with a sliding UI value
+  const minWeight = 5.682434789378021e-7;
+  const maxWeight = 0.000340308528393507;
+  const [play, setPlay] = useState(true);
+  const [lastPausedTime, setLastPausedTime] = useState(Date.now());
+  const [lastPlayedTime, setLastPlayedTime] = useState(Date.now());
+  // const colors = [
+  //   "#ffb3ba",
+  //   "#ffdfba",
+  //   "#ffffba",
+  //   "#baffc9",
+  //   "#bae1ff",
+  //   "#a399d0",
+  // ];
+  // let colorI = 0;
 
   const keyToPitch: { [key: string]: number } = {
     q: 40,
@@ -47,12 +60,16 @@ export const Welcome = () => {
   useEffect(() => {
     let animId: number;
     const updateTime = () => {
-      setCurTime(Date.now());
+      if (!play) {
+        setCurTime(lastPausedTime);
+      } else {
+        setCurTime(Date.now() - lastPlayedTime + lastPausedTime);
+      }
       animId = requestAnimationFrame(updateTime);
     };
     updateTime();
     return () => cancelAnimationFrame(animId);
-  }, [setCurTime]);
+  }, [setCurTime, lastPausedTime, play, lastPlayedTime]);
 
   // draw staff and notes
   useEffect(() => {
@@ -65,28 +82,70 @@ export const Welcome = () => {
           return;
         }
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        drawStaff(canvas, canvas.height * 0.3); // treble staff
-        drawStaff(canvas, canvas.height * 0.54);
-        // canvas! instead of canvas because we know canvas is not null
+        drawStaff(canvas, canvas.height * 0.3, "treble"); // treble staff
+        drawStaff(canvas, canvas.height * 0.54, "bass"); // bass staff
+
         notes.forEach((note) => drawNote(canvas!, note, curTime, zoom));
+
+        // draw the arc from the current note to any previous notes that it is referring to
+        for (let i = 0; i < popper.length; i++) {
+          const curNote = {
+            pitch: popper[i].pitch,
+            startTime: popper[i].startTime,
+            endTime: popper[i].endTime,
+          };
+          // ctx.strokeStyle = colors[colorI];
+          // ctx.fillStyle = colors[colorI];
+          drawNote(canvas!, curNote, curTime, zoom);
+
+          const attention = popper[i].attention;
+          for (let j = 0; j < attention.length; j++) {
+            if (i !== j && attention[j] >= arcThresh) {
+              const pastNote = {
+                pitch: popper[j].pitch,
+                startTime: popper[j].startTime,
+                endTime: popper[j].endTime,
+              };
+              drawArc(canvas!, curNote, pastNote, curTime, zoom);
+            }
+          }
+
+          // colorI += 1;
+          // if (colorI > colors.length - 1) {
+          //   colorI = 0;
+          // }
+        }
       }
     };
     animate();
-  }, [notes, curTime, drawStaff]);
+  }, [notes, curTime, drawStaff, play, lastPausedTime]);
 
   // detect when note is played (noteOn)
   const handleKeyDown = (event: KeyboardEvent) => {
     if (event.repeat) return; // prevent key repeat
+
+    // play/pause toggle
+    if (event.key == " ") {
+      if (play) {
+        setLastPausedTime(curTime);
+      } else {
+        setLastPlayedTime(Date.now());
+      }
+      setPlay(!play);
+    }
+
     // play fake notes
     if (event.key == "f") {
-      const firstFakeStartTime = popper[0].startTime;
-      const newPopper = popper.map((note) => {
-        note.startTime = curTime + note.startTime - firstFakeStartTime;
-        note.endTime = curTime + note.endTime - firstFakeStartTime;
-        return note;
-      });
-      const newNotes = [...notes, ...newPopper];
-      setNotes(newNotes);
+      if (play) {
+        const firstFakeStartTime = popper[0].startTime;
+        const newPopper = popper.map((note) => {
+          note.startTime = curTime + note.startTime - firstFakeStartTime;
+          note.endTime = curTime + note.endTime - firstFakeStartTime;
+          return note;
+        });
+        const newNotes = [...notes, ...newPopper];
+        setNotes(newNotes);
+      }
     } else {
       try {
         // append new note to notesAndTime.notes and set pitch and startTime
@@ -100,7 +159,7 @@ export const Welcome = () => {
         const newNotes = [...notes, newNote];
         setNotes(newNotes);
 
-        console.log("keydown: ", newNotes);
+        // console.log("keydown: ", newNotes);
       } catch {
         console.log("key must be a number 0 through 9");
       }
@@ -120,7 +179,7 @@ export const Welcome = () => {
         return note;
       });
       setNotes(newNotes);
-      console.log("keyup: ", notes);
+      // console.log("keyup: ", notes);
     } catch {
       console.log("key must be a number 0 through 9");
     }
@@ -156,7 +215,32 @@ export const Welcome = () => {
   const handleZoomChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const zoomVal = Number(event.target.value);
     setZoom(zoomVal);
-    console.log(zoomVal);
+    // console.log(zoomVal);
+  };
+
+  // update visible attention weight arch thresh
+  const handleThreshChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const arcThresh = scale(
+      Number(event.target.value),
+      0,
+      100,
+      minWeight,
+      maxWeight
+    );
+    setArcThresh(arcThresh);
+    // console.log(arcThresh);
+  };
+
+  const scale = (
+    input: number,
+    inLow: number,
+    inHigh: number,
+    outLow: number,
+    outHigh: number
+  ) => {
+    const val =
+      ((input - inLow) / (inHigh - inLow)) * (outHigh - outLow) + outLow;
+    return val;
   };
 
   return (
@@ -164,12 +248,16 @@ export const Welcome = () => {
       <div>
         <h1>Music Visualization App</h1>
         <h2>Press 0-9 to play notes C4-E5 respectively</h2>
-        <h2>Press 'f' to play Twinkle Twinkle Little Star</h2>
+        <h2>Press 'f' to play/pause Twinkle Twinkle Little Star</h2>
+        <h2>Currently {play ? "Playing" : "Paused"}</h2>
         <h2>*Chromatic notes are in red*</h2>
         {/* <p>{new Date(curTime).toString()}</p> */}
         <h2>Slide to zoom in/out</h2>
         <input type="range" onChange={handleZoomChange} />
         <h2>{zoom}% zoom</h2>
+        <h2>Slide to set visible attention weight threshold</h2>
+        <input type="range" onChange={handleThreshChange} />
+        <h2>Attention weight min theshold: {arcThresh}</h2>
         <canvas
           ref={canvasRef}
           width="800"

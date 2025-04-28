@@ -1,10 +1,15 @@
 import type { Note } from "../note/note";
+import { getY, pitchVals } from "../utils/utils";
 
 // doesn't have animation, just draws note rectangle based on curTime
-const pitchVals = [
-  40, 41, 43, 45, 47, 48, 50, 52, 53, 55, 57, 59, 60, 62, 64, 65, 67, 69, 71,
-  72, 74, 76, 77, 79, 81,
-];
+
+// highlight a note that is currently playing
+// add the audio
+// draw the arc only when the note is active + 2 sec or something
+// only use color for the active notes
+
+// fade in and fade out for the arcs or notes
+// changing transparency
 
 export const drawNote = (
   canvas: HTMLCanvasElement,
@@ -24,40 +29,35 @@ export const drawNote = (
 
   const startTime = note.startTime;
   const endTime = note.endTime;
-  const staffY = canvas.height * 0.3;
 
-  const speed = zoom / 225 + 0.01; // pixels/ms
+  const speed = zoom / 1000 + 0.01; // pixels/ms
   const lineSpacing = (canvas.height * 0.2) / 5;
   const curEndTime = !endTime ? curTime : endTime;
-  const noteWidth = (curEndTime - startTime) * speed;
-  const x = canvas.width - (curTime - startTime) * speed;
-  const noteHeight = lineSpacing * 0.7;
+  const noteWidth = (curEndTime - startTime) * speed * 6;
+  const x = canvas.width - (curTime - startTime) * speed * 6;
+  const y = getY(pitch, canvas);
 
-  let y;
+  if (y) {
+    ctx.fillRect(x, y, noteWidth, lineSpacing);
 
-  const pitchIndex = findClosestIndex(pitch);
-  if (pitchIndex) {
-    const key = pitchIndex - 11;
-    y = staffY + 4 * lineSpacing + ((3 - key) * lineSpacing - noteHeight) / 2;
-    if (Number.isInteger(key)) {
-      ctx.fillStyle = "blue";
-    } else {
-      ctx.fillStyle = "red";
-    }
-    ctx.fillRect(x, y, noteWidth, lineSpacing * 0.7);
-  }
-};
+    // draw a sharp in front of note if necessary // fix this
+    // const pitchIndex = pitchVals.findIndex((pitchVal) => pitchVal === pitch);
+    // if (pitchIndex === -1) {
+    //   let svg = "../svg/sharp.svg";
+    //   fetch(svg)
+    //     .then((res) => res.text())
+    //     .then((svgText) => {
+    //       const svgBlob = new Blob([svgText], { type: "image/svg+xml" });
+    //       const url = URL.createObjectURL(svgBlob);
+    //       const img = new Image();
 
-const findClosestIndex = (pitch: number) => {
-  let i = pitchVals.findIndex((pitchVal) => pitchVal === pitch);
-  if (i !== -1) {
-    return i;
-  } else {
-    for (let j = 0; j < pitchVals.length; j++) {
-      const existingPitch = pitchVals[j];
-      if (pitch < existingPitch) {
-        return j - 0.5;
-      }
-    }
+    //       img.onload = () => {
+    //         ctx.drawImage(img, x - 20, y, 10, 10);
+    //         URL.revokeObjectURL(url); // Clean up
+    //       };
+
+    //       img.src = url;
+    //     });
+    // }
   }
 };
