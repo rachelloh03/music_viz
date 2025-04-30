@@ -13,13 +13,17 @@ export const drawArc = (
     return;
   }
 
-  const speed = zoom / 1000 + 0.01; // pixels/ms
-  const x1 = canvas.width - (curTime - pastNote.startTime) * speed * 6;
-  const x2 = canvas.width - (curTime - curNote.startTime) * speed * 6;
+  ctx.strokeStyle = "#a399d0";
+  ctx.fillStyle = "#a399d0";
+
+  const speed = zoom / 100 + 0.01; // pixels/ms
+  const x1 = canvas.width - (curTime - pastNote.startTime) * speed;
+  const x2 = canvas.width - (curTime - curNote.startTime) * speed;
   const y1 = getY(pastNote.pitch, canvas);
   const y2 = getY(curNote.pitch, canvas);
+
   //   const circleX = (x2 + x1) / 2;
-  if (y1 && y2) {
+  if (y1 && y2 && x2 >= canvas.width - 50 * speed) {
     // const radius = Math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2) / 2;
     // const circleY = (y1 + y2) / 2;
     // const startAngle =
