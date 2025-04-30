@@ -4,7 +4,7 @@ import type { Note } from "../note/note";
 import { drawNote } from "../drawNote/drawNote";
 import { drawArc } from "../drawArc/drawArc";
 import { popper } from "../fakeData/popper";
-// import * as Tone from "tone";
+import * as Tone from "tone";
 
 export const Welcome = () => {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -35,16 +35,6 @@ export const Welcome = () => {
   const [maxWeight, setMaxWeight] = useState(0.000340308528393507);
   const [arcThresh, setArcThresh] = useState((minWeight + maxWeight) / 2);
   const threshInputRef = useRef<HTMLInputElement>(null);
-
-  // const synth = new Tone.Synth().toDestination();
-  // const playBTN = document.getElementById("play-btn");
-
-  // playBTN?.addEventListener("click", () => {
-  //   if (Tone.context.state !== "running") {
-  //     Tone.start();
-  //   }
-  //   synth.triggerAttackRelease("C3", "8n");
-  // });
 
   // const colors = [
   //   "#ffb3ba",
@@ -190,6 +180,16 @@ export const Welcome = () => {
         });
         const newNotes = [...notes, ...newPopper];
         setNotes(newNotes);
+
+        // const context = Tone.getContext();
+        // const transport = Tone.getTransport();
+
+        // if (context.state !== "running") {
+        //   Tone.start().then(()=> {
+        //     const synth = new Tone.Synth().toDestination();
+
+        //   })
+        // }
       }
     } else {
       try {
@@ -236,6 +236,14 @@ export const Welcome = () => {
       document.removeEventListener("keyup", handleKeyUp);
     };
   }, [handleKeyDown, handleKeyUp]);
+
+  // start audio context
+  useEffect(() => {
+    const context = Tone.getContext();
+    if (context.state !== "running") {
+      Tone.start();
+    }
+  }, [handleKeyDown]);
 
   // returns the corresponding pitch, given the key pressed
   const getPitch = (event: KeyboardEvent) => {
@@ -321,7 +329,9 @@ export const Welcome = () => {
       <div>
         <h1>Music Visualization App</h1>
         {/* <h2>Press 0-9 to play notes C4-E5 respectively</h2> */}
-        <h2>Press 'f' to play Popper Etude</h2>
+        <h2>
+          Press <strong>F</strong> to play Popper Etude
+        </h2>
         <h2>Press spacebar to play/pause</h2>
         <h2>Currently {play ? "Playing" : "Paused"}</h2>
         {/* <p>{new Date(curTime).toString()}</p> */}

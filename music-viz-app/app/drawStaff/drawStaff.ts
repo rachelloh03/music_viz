@@ -47,20 +47,4 @@ export const drawStaff = (
     clefY = staffY;
     clefX = 10;
   }
-
-  // fetch(svg)
-  //   .then((res) => res.text())
-  //   .then((svgText) => {
-  //     const svgBlob = new Blob([svgText], { type: "image/svg+xml" });
-  //     const url = URL.createObjectURL(svgBlob);
-  //     const img = new Image();
-
-  //     img.onload = () => {
-  //       // Draw the clef to the left of the staff
-  //       ctx.drawImage(img, clefX, clefY, clefWidth, clefHeight);
-  //       URL.revokeObjectURL(url); // Clean up
-  //     };
-
-  //     img.src = url;
-  //   });
 };
