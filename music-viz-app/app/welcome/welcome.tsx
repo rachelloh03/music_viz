@@ -4,16 +4,26 @@ import type { Note } from "../note/note";
 import { drawNote } from "../drawNote/drawNote";
 import { drawArc } from "../drawArc/drawArc";
 import { popper } from "../fakeData/popper";
+import { playNote } from "../playNote/playNote";
 import * as Tone from "tone";
+
+// for each event, sort the weights from greatest to least
+// show the thresh percentage of the weights
+// also show the absolute thresh
+
+const getTime = () => {
+  return Date.now() * 0.5;
+};
 
 export const Welcome = () => {
   const [notes, setNotes] = useState<Note[]>([]);
-  const [curTime, setCurTime] = useState(Date.now());
+  const [curTime, setCurTime] = useState(getTime());
   const [zoom, setZoom] = useState(50);
   const [play, setPlay] = useState(true);
-  const [lastPausedTime, setLastPausedTime] = useState(Date.now());
-  const [lastPlayedTime, setLastPlayedTime] = useState(Date.now());
+  const [lastPausedTime, setLastPausedTime] = useState(getTime());
+  const [lastPlayedTime, setLastPlayedTime] = useState(getTime());
   const [curHead, setCurHead] = useState(0);
+  const [playedNotes, setPlayedNotes] = useState<Note[]>([]);
 
   // list of data files for each head; append when I get more files
   const headFiles = [
@@ -35,6 +45,7 @@ export const Welcome = () => {
   const [maxWeight, setMaxWeight] = useState(0.000340308528393507);
   const [arcThresh, setArcThresh] = useState((minWeight + maxWeight) / 2);
   const threshInputRef = useRef<HTMLInputElement>(null);
+  const synthRef = useRef<Tone.Synth | null>(null);
 
   // const colors = [
   //   "#ffb3ba",
@@ -91,6 +102,30 @@ export const Welcome = () => {
     return () => cancelAnimationFrame(animId);
   }, [setCurTime, lastPausedTime, play, lastPlayedTime]);
 
+  // play audio
+  useEffect(() => {
+    // start audio context if haven't yet
+    if (!synthRef.current) {
+      synthRef.current = new Tone.Synth().toDestination();
+    }
+    const context = Tone.getContext();
+    if (context.state !== "running") {
+      Tone.start();
+    }
+    for (let i = 0; i < notes.length; i++) {
+      const note = notes[i];
+      if (
+        curTime >= note.startTime &&
+        !playedNotes.includes(note) &&
+        synthRef.current
+      ) {
+        playNote(note, synthRef.current, curTime);
+        const newPlayedNotes = [...playedNotes, note];
+        setPlayedNotes(newPlayedNotes);
+      }
+    }
+  }, [curTime, notes, playedNotes]);
+
   // get arc threshold slider value
   const getArcSliderVal = () => {
     const val = threshInputRef.current?.value;
@@ -117,15 +152,16 @@ export const Welcome = () => {
       if (canvas) {
         const ctx = canvas.getContext("2d");
         canvas.height = 400;
-        if (!ctx) {
+        if (!ctx || !synthRef.current) {
           return;
         }
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         drawStaff(canvas, canvas.height * 0.3, "treble"); // treble staff
         drawStaff(canvas, canvas.height * 0.54, "bass"); // bass staff
 
-        // notes.forEach((note) => drawNote(canvas!, note, curTime, zoom, synth));
-        notes.forEach((note) => drawNote(canvas!, note, curTime, zoom));
+        notes.forEach((note, i) => {
+          drawNote(canvas!, note, curTime, zoom);
+        });
 
         // draw the arc from the current note to any previous notes that it is referring to
         for (let i = 0; i < popper.length; i++) {
@@ -135,8 +171,8 @@ export const Welcome = () => {
             endTime: popper[i].endTime,
           };
 
-          // drawNote(canvas!, curNote, curTime, zoom, synth);
           drawNote(canvas!, curNote, curTime, zoom);
+          // drawNote(canvas!, curNote, curTime, zoom);
 
           const attention = popper[i].attention;
           for (let j = 0; j < attention.length; j++) {
@@ -164,7 +200,7 @@ export const Welcome = () => {
       if (play) {
         setLastPausedTime(curTime);
       } else {
-        setLastPlayedTime(Date.now());
+        setLastPlayedTime(getTime());
       }
       setPlay(!play);
     }
@@ -180,16 +216,6 @@ export const Welcome = () => {
         });
         const newNotes = [...notes, ...newPopper];
         setNotes(newNotes);
-
-        // const context = Tone.getContext();
-        // const transport = Tone.getTransport();
-
-        // if (context.state !== "running") {
-        //   Tone.start().then(()=> {
-        //     const synth = new Tone.Synth().toDestination();
-
-        //   })
-        // }
       }
     } else {
       try {
@@ -203,6 +229,13 @@ export const Welcome = () => {
 
         const newNotes = [...notes, newNote];
         setNotes(newNotes);
+
+        // play audio here
+        // if (synthRef.current && !playedNotes.includes(newNote)) {
+        //   playNote(newNote, synthRef.current, curTime);
+        //   const newPlayedNotes = [...playedNotes, newNote];
+        //   setPlayedNotes(newPlayedNotes);
+        // }
       } catch {
         console.log("key must be a number 0 through 9");
       }
@@ -236,14 +269,6 @@ export const Welcome = () => {
       document.removeEventListener("keyup", handleKeyUp);
     };
   }, [handleKeyDown, handleKeyUp]);
-
-  // start audio context
-  useEffect(() => {
-    const context = Tone.getContext();
-    if (context.state !== "running") {
-      Tone.start();
-    }
-  }, [handleKeyDown]);
 
   // returns the corresponding pitch, given the key pressed
   const getPitch = (event: KeyboardEvent) => {

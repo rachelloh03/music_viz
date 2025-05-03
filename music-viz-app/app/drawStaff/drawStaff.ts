@@ -47,4 +47,18 @@ export const drawStaff = (
     clefY = staffY;
     clefX = 10;
   }
+
+  const img = new Image();
+  const svgBlob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
+  const url = URL.createObjectURL(svgBlob);
+
+  img.onload = () => {
+    console.log("draw clef");
+    ctx.drawImage(img, clefX, clefY, clefWidth, clefHeight);
+    URL.revokeObjectURL(url);
+  };
+  img.onerror = () => {
+    URL.revokeObjectURL(url);
+  };
+  img.src = url;
 };
