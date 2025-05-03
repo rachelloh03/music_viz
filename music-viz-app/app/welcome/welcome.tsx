@@ -4,7 +4,9 @@ import type { Note } from "../note/note";
 import { drawNote } from "../drawNote/drawNote";
 import { drawArc } from "../drawArc/drawArc";
 import { popper } from "../fakeData/popper";
-import { playNote } from "../playNote/playNote";
+import { playNote } from "../audio/playNote";
+// import { startNote } from "../audio/startNote";
+// import { endNote } from "../audio/endNote";
 import * as Tone from "tone";
 
 // for each event, sort the weights from greatest to least
@@ -24,6 +26,7 @@ export const Welcome = () => {
   const [lastPlayedTime, setLastPlayedTime] = useState(getTime());
   const [curHead, setCurHead] = useState(0);
   const [playedNotes, setPlayedNotes] = useState<Note[]>([]);
+  // const [startedNotes, setStartedNotes] = useState<Note[]>([]);
 
   // list of data files for each head; append when I get more files
   const headFiles = [
@@ -45,7 +48,9 @@ export const Welcome = () => {
   const [maxWeight, setMaxWeight] = useState(0.000340308528393507);
   const [arcThresh, setArcThresh] = useState((minWeight + maxWeight) / 2);
   const threshInputRef = useRef<HTMLInputElement>(null);
+
   const synthRef = useRef<Tone.Synth | null>(null);
+  let context: Tone.BaseContext;
 
   // const colors = [
   //   "#ffb3ba",
@@ -94,7 +99,7 @@ export const Welcome = () => {
       if (!play) {
         setCurTime(lastPausedTime);
       } else {
-        setCurTime(Date.now() - lastPlayedTime + lastPausedTime);
+        setCurTime(getTime() - lastPlayedTime + lastPausedTime);
       }
       animId = requestAnimationFrame(updateTime);
     };
@@ -108,7 +113,7 @@ export const Welcome = () => {
     if (!synthRef.current) {
       synthRef.current = new Tone.Synth().toDestination();
     }
-    const context = Tone.getContext();
+    context = Tone.getContext();
     if (context.state !== "running") {
       Tone.start();
     }
@@ -117,13 +122,35 @@ export const Welcome = () => {
       if (
         curTime >= note.startTime &&
         !playedNotes.includes(note) &&
-        synthRef.current
+        synthRef.current &&
+        note.endTime
       ) {
-        playNote(note, synthRef.current, curTime);
+        playNote(note, synthRef.current);
         const newPlayedNotes = [...playedNotes, note];
         setPlayedNotes(newPlayedNotes);
       }
     }
+
+    // // attempt to play audio in real time
+    // for (let i = 0; i < notes.length; i++) {
+    //   const note = notes[i];
+    //   if (
+    //     curTime >= note.startTime &&
+    //     !startedNotes.includes(note) &&
+    //     synthRef.current
+    //   ) {
+    //     startNote(note, synthRef.current);
+    //     const newStartedNotes = [...startedNotes, note];
+    //     setStartedNotes(newStartedNotes);
+    //   } else if (
+    //     note.endTime &&
+    //     curTime >= note.endTime &&
+    //     startedNotes.includes(note) &&
+    //     synthRef.current
+    //   ) {
+    //     endNote(note, synthRef.current);
+    //   }
+    // }
   }, [curTime, notes, playedNotes]);
 
   // get arc threshold slider value
@@ -159,7 +186,7 @@ export const Welcome = () => {
         drawStaff(canvas, canvas.height * 0.3, "treble"); // treble staff
         drawStaff(canvas, canvas.height * 0.54, "bass"); // bass staff
 
-        notes.forEach((note, i) => {
+        notes.forEach((note) => {
           drawNote(canvas!, note, curTime, zoom);
         });
 
@@ -172,7 +199,6 @@ export const Welcome = () => {
           };
 
           drawNote(canvas!, curNote, curTime, zoom);
-          // drawNote(canvas!, curNote, curTime, zoom);
 
           const attention = popper[i].attention;
           for (let j = 0; j < attention.length; j++) {
@@ -210,9 +236,11 @@ export const Welcome = () => {
       if (play) {
         const firstFakeStartTime = popper[0].startTime;
         const newPopper = popper.map((note) => {
-          note.startTime = curTime + note.startTime - firstFakeStartTime;
-          note.endTime = curTime + note.endTime - firstFakeStartTime;
-          return note;
+          return {
+            ...note,
+            startTime: curTime + note.startTime - firstFakeStartTime,
+            endTime: curTime + note.endTime - firstFakeStartTime,
+          };
         });
         const newNotes = [...notes, ...newPopper];
         setNotes(newNotes);
@@ -229,13 +257,6 @@ export const Welcome = () => {
 
         const newNotes = [...notes, newNote];
         setNotes(newNotes);
-
-        // play audio here
-        // if (synthRef.current && !playedNotes.includes(newNote)) {
-        //   playNote(newNote, synthRef.current, curTime);
-        //   const newPlayedNotes = [...playedNotes, newNote];
-        //   setPlayedNotes(newPlayedNotes);
-        // }
       } catch {
         console.log("key must be a number 0 through 9");
       }
