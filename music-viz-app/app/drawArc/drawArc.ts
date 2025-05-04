@@ -23,7 +23,7 @@ export const drawArc = (
   const y2 = getY(curNote.pitch, canvas);
 
   //   const circleX = (x2 + x1) / 2;
-  if (y1 && y2 && x2 >= canvas.width - 50 * speed) {
+  if (y1 && y2 && x2 > 0) {
     // const radius = Math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2) / 2;
     // const circleY = (y1 + y2) / 2;
     // const startAngle =
@@ -44,6 +44,7 @@ export const drawArc = (
     const curNoteWidth = (curEndTime - curNote.startTime) * speed * 6;
 
     // if (x2 > canvas.width - curNoteWidth) {
+
     ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.moveTo(x1, y1);

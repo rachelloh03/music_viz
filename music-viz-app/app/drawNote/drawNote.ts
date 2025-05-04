@@ -30,7 +30,7 @@ export const drawNote = (
   const y = getY(pitch, canvas);
 
   // active notes are colored
-  if (x >= canvas.width - noteWidth - 50 * speed) {
+  if (x >= canvas.width - noteWidth) {
     ctx.strokeStyle = "#a399d0";
     ctx.fillStyle = "#a399d0";
   } else {
@@ -38,7 +38,7 @@ export const drawNote = (
     ctx.fillStyle = "#000000";
   }
 
-  if (y) {
+  if (y && x + noteWidth > 0) {
     ctx.fillRect(x, y, noteWidth, lineSpacing);
   }
 };

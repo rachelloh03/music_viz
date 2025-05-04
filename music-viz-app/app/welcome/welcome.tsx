@@ -9,9 +9,7 @@ import { playNote } from "../audio/playNote";
 // import { endNote } from "../audio/endNote";
 import * as Tone from "tone";
 
-// for each event, sort the weights from greatest to least
-// show the thresh percentage of the weights
-// also show the absolute thresh
+// also show the absolute thresh? doesn't that change every note?
 
 const getTime = () => {
   return Date.now() * 0.5;
@@ -27,6 +25,7 @@ export const Welcome = () => {
   const [curHead, setCurHead] = useState(0);
   const [playedNotes, setPlayedNotes] = useState<Note[]>([]);
   // const [startedNotes, setStartedNotes] = useState<Note[]>([]);
+  const [lastFTime, setlastFTime] = useState(0);
 
   // list of data files for each head; append when I get more files
   const headFiles = [
@@ -43,10 +42,12 @@ export const Welcome = () => {
     popper,
   ];
   const [curHeadFile, setCurHeadFile] = useState(popper);
+  const firstFakeStartTime = curHeadFile[0].startTime;
 
-  const [minWeight, setMinWeight] = useState(4.603590468832408e-7);
-  const [maxWeight, setMaxWeight] = useState(0.000340308528393507);
-  const [arcThresh, setArcThresh] = useState((minWeight + maxWeight) / 2);
+  // const [minWeight, setMinWeight] = useState(4.603590468832408e-7);
+  // const [maxWeight, setMaxWeight] = useState(0.000340308528393507);
+  // const [arcThresh, setArcThresh] = useState((minWeight + maxWeight) / 2);
+  const [arcThresh, setArcThresh] = useState(50);
   const threshInputRef = useRef<HTMLInputElement>(null);
 
   const synthRef = useRef<Tone.Synth | null>(null);
@@ -151,7 +152,7 @@ export const Welcome = () => {
     //     endNote(note, synthRef.current);
     //   }
     // }
-  }, [curTime, notes, playedNotes]);
+  }, [curTime, notes, playedNotes, setPlayedNotes, playNote]);
 
   // get arc threshold slider value
   const getArcSliderVal = () => {
@@ -162,17 +163,17 @@ export const Welcome = () => {
   };
 
   // set attention min / max weights based on curHeadFile
-  useEffect(() => {
-    const weights = getMinMaxWeights(curHeadFile);
-    setMinWeight(weights[0]);
-    setMaxWeight(weights[1]);
-    const arcSliderVal = getArcSliderVal();
-    if (arcSliderVal) {
-      setArcThresh(((minWeight + maxWeight) * parseInt(arcSliderVal)) / 100);
-    }
-  }, [curHeadFile, setMinWeight, setMaxWeight, curHead]);
+  // useEffect(() => {
+  //   const weights = getMinMaxWeights(curHeadFile);
+  //   setMinWeight(weights[0]);
+  //   setMaxWeight(weights[1]);
+  //   const arcSliderVal = getArcSliderVal();
+  //   if (arcSliderVal) {
+  //     setArcThresh(((minWeight + maxWeight) * parseInt(arcSliderVal)) / 100);
+  //   }
+  // }, [curHeadFile, setMinWeight, setMaxWeight, curHead]);
 
-  // draw staff and notes
+  // draw staff, notes, and arcs
   useEffect(() => {
     canvas = canvasRef.current;
     const animate = () => {
@@ -191,31 +192,69 @@ export const Welcome = () => {
         });
 
         // draw the arc from the current note to any previous notes that it is referring to
-        for (let i = 0; i < popper.length; i++) {
+        for (let i = 0; i < curHeadFile.length; i++) {
           const curNote = {
-            pitch: popper[i].pitch,
-            startTime: popper[i].startTime,
-            endTime: popper[i].endTime,
+            pitch: curHeadFile[i].pitch,
+            startTime:
+              lastFTime + curHeadFile[i].startTime - firstFakeStartTime,
+            endTime: lastFTime + curHeadFile[i].endTime - firstFakeStartTime,
           };
 
-          drawNote(canvas!, curNote, curTime, zoom);
+          // sort attention weights in descending order
+          const indexedWeights = curHeadFile[i].attention.map(
+            (weight, i) => [i, weight] as [number, number]
+          );
+          const sortedWeights = indexedWeights.sort((a, b) => b[1] - a[1]);
 
-          const attention = popper[i].attention;
-          for (let j = 0; j < attention.length; j++) {
-            if (i !== j && attention[j] >= arcThresh) {
+          // calculate arc threshold value
+          const weightSum = sortedWeights.reduce(
+            (sum, weight) => sum + weight[1],
+            0
+          );
+
+          const thresh = (arcThresh / 100) * weightSum;
+
+          // store current sum of weights of arcs shown
+          let curSum = 0;
+          for (let j = 0; j < sortedWeights.length; j++) {
+            const noteIndex = sortedWeights[j][0];
+            const noteWeight = sortedWeights[j][1];
+            if (
+              noteIndex !== i &&
+              curSum + noteWeight < thresh &&
+              noteWeight !== 0.0
+            ) {
               const pastNote = {
-                pitch: popper[j].pitch,
-                startTime: popper[j].startTime,
-                endTime: popper[j].endTime,
+                pitch: curHeadFile[noteIndex].pitch,
+                startTime:
+                  lastFTime +
+                  curHeadFile[noteIndex].startTime -
+                  firstFakeStartTime,
+                endTime:
+                  lastFTime +
+                  curHeadFile[noteIndex].endTime -
+                  firstFakeStartTime,
               };
               drawArc(canvas!, curNote, pastNote, curTime, zoom);
+              curSum += noteWeight;
             }
           }
         }
       }
     };
     animate();
-  }, [notes, curTime, drawStaff, play, lastPausedTime]);
+  }, [
+    notes,
+    curTime,
+    drawStaff,
+    drawArc,
+    drawNote,
+    play,
+    lastPausedTime,
+    arcThresh,
+    curHeadFile,
+    lastFTime,
+  ]);
 
   // detect when note is played (noteOn)
   const handleKeyDown = (event: KeyboardEvent) => {
@@ -234,7 +273,6 @@ export const Welcome = () => {
     // play fake notes
     if (event.key == "f") {
       if (play) {
-        const firstFakeStartTime = popper[0].startTime;
         const newPopper = popper.map((note) => {
           return {
             ...note,
@@ -244,6 +282,7 @@ export const Welcome = () => {
         });
         const newNotes = [...notes, ...newPopper];
         setNotes(newNotes);
+        setlastFTime(curTime);
       }
     } else {
       try {
@@ -315,13 +354,7 @@ export const Welcome = () => {
 
   // update visible attention weight arch thresh
   const handleThreshChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newArcThresh = scale(
-      Number(event.target.value),
-      0,
-      100,
-      minWeight,
-      maxWeight
-    );
+    const newArcThresh = Number(event.target.value);
     setArcThresh(newArcThresh);
   };
 
@@ -391,7 +424,7 @@ export const Welcome = () => {
             onChange={handleThreshChange}
             ref={threshInputRef}
           />
-          <h2> Attention theshold: {arcThresh}</h2>
+          <h2> Attention: Top {arcThresh}%</h2>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
