@@ -3,7 +3,18 @@ import { drawStaff } from "../drawStaff/drawStaff";
 import type { Note } from "../note/note";
 import { drawNote } from "../drawNote/drawNote";
 import { drawArc } from "../drawArc/drawArc";
-import { popper } from "../fakeData/popper";
+import { popper0 } from "../fakeData/popper0";
+import { popper1 } from "../fakeData/popper1";
+import { popper2 } from "../fakeData/popper2";
+import { popper3 } from "../fakeData/popper3";
+import { popper4 } from "../fakeData/popper4";
+import { popper5 } from "../fakeData/popper5";
+import { popper6 } from "../fakeData/popper6";
+import { popper7 } from "../fakeData/popper7";
+import { popper8 } from "../fakeData/popper8";
+import { popper9 } from "../fakeData/popper9";
+import { popper10 } from "../fakeData/popper10";
+import { popper11 } from "../fakeData/popper11";
 import { playNote } from "../audio/playNote";
 // import { startNote } from "../audio/startNote";
 // import { endNote } from "../audio/endNote";
@@ -23,25 +34,27 @@ export const Welcome = () => {
   const [lastPausedTime, setLastPausedTime] = useState(getTime());
   const [lastPlayedTime, setLastPlayedTime] = useState(getTime());
   const [curHead, setCurHead] = useState(0);
-  const [playedNotes, setPlayedNotes] = useState<Note[]>([]);
+  // const [playedNotes, setPlayedNotes] = useState<Note[]>([]);
+  const [lastPlayedNoteIndex, setLastPlayedNoteIndex] = useState(-1);
   // const [startedNotes, setStartedNotes] = useState<Note[]>([]);
   const [lastFTime, setlastFTime] = useState(0);
 
   // list of data files for each head; append when I get more files
   const headFiles = [
-    popper,
-    popper,
-    popper,
-    popper,
-    popper,
-    popper,
-    popper,
-    popper,
-    popper,
-    popper,
-    popper,
+    popper0,
+    popper1,
+    popper2,
+    popper3,
+    popper4,
+    popper5,
+    popper6,
+    popper7,
+    popper8,
+    popper9,
+    popper10,
+    popper11,
   ];
-  const [curHeadFile, setCurHeadFile] = useState(popper);
+  const [curHeadFile, setCurHeadFile] = useState(popper0);
   const firstFakeStartTime = curHeadFile[0].startTime;
 
   // const [minWeight, setMinWeight] = useState(4.603590468832408e-7);
@@ -122,13 +135,13 @@ export const Welcome = () => {
       const note = notes[i];
       if (
         curTime >= note.startTime &&
-        !playedNotes.includes(note) &&
+        i > lastPlayedNoteIndex &&
         synthRef.current &&
-        note.endTime
+        note.endTime &&
+        note.pitch
       ) {
         playNote(note, synthRef.current);
-        const newPlayedNotes = [...playedNotes, note];
-        setPlayedNotes(newPlayedNotes);
+        setLastPlayedNoteIndex(i);
       }
     }
 
@@ -152,7 +165,7 @@ export const Welcome = () => {
     //     endNote(note, synthRef.current);
     //   }
     // }
-  }, [curTime, notes, playedNotes, setPlayedNotes, playNote]);
+  }, [curTime, notes, lastPlayedNoteIndex, setLastPlayedNoteIndex, playNote]);
 
   // get arc threshold slider value
   const getArcSliderVal = () => {
@@ -273,7 +286,7 @@ export const Welcome = () => {
     // play fake notes
     if (event.key == "f") {
       if (play) {
-        const newPopper = popper.map((note) => {
+        const newPopper = curHeadFile.map((note) => {
           return {
             ...note,
             startTime: curTime + note.startTime - firstFakeStartTime,
@@ -428,7 +441,7 @@ export const Welcome = () => {
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((headNumber) => (
+          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((headNumber) => (
             <button
               key={headNumber}
               onClick={() => handleHeadChange(headNumber)}

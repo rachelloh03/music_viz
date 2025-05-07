@@ -23,7 +23,7 @@ export const drawArc = (
   const y2 = getY(curNote.pitch, canvas);
 
   //   const circleX = (x2 + x1) / 2;
-  if (y1 && y2 && x2 > 0) {
+  if (y1 && y2 && x2 > 0 && x2 <= canvas.width) {
     // const radius = Math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2) / 2;
     // const circleY = (y1 + y2) / 2;
     // const startAngle =
