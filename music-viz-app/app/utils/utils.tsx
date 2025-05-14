@@ -30,3 +30,12 @@ export const getY = (pitch: number, canvas: HTMLCanvasElement) => {
   }
   return y;
 };
+
+export const getAlpha = (x: number, canvas: HTMLCanvasElement) => {
+  const fadeWidth = 150;
+  if (x <= fadeWidth) {
+    return x / fadeWidth;
+  } else {
+    return 1.0;
+  }
+};

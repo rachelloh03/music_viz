@@ -1,5 +1,5 @@
 import type { Note } from "../note/note";
-import { getY, pitchVals } from "../utils/utils";
+import { getY, getAlpha } from "../utils/utils";
 
 // doesn't have animation, just draws note rectangle based on curTime
 
@@ -28,14 +28,15 @@ export const drawNote = (
   const noteWidth = (curEndTime - startTime) * speed;
   const x = canvas.width - (curTime - startTime) * speed;
   const y = getY(pitch, canvas);
+  const alpha = getAlpha(x, canvas);
 
   // active notes are colored
   if (x >= canvas.width - noteWidth) {
-    ctx.strokeStyle = "#a399d0";
-    ctx.fillStyle = "#a399d0";
+    ctx.strokeStyle = `rgba(163, 153, 208, ${alpha})`;
+    ctx.fillStyle = `rgba(163, 153, 208, ${alpha})`;
   } else {
-    ctx.strokeStyle = "#000000";
-    ctx.fillStyle = "#000000";
+    ctx.strokeStyle = `rgba(0, 0, 0, ${alpha})`;
+    ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
   }
 
   if (y && x + noteWidth > 0) {

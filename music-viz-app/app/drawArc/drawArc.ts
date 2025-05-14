@@ -38,9 +38,9 @@ export const drawArc = (
     const circleY = (y1 + y2) / 2;
     const startAngle = Math.atan2(y1 - circleY, x1 - circleX);
     const endAngle = Math.atan2(y2 - circleY, x2 - circleX);
+
     ctx.beginPath();
     ctx.arc(circleX, circleY, radius, startAngle, endAngle);
-    ctx.fillStyle = "green";
     ctx.stroke();
 
     // uncomment if want to draw lines instead of arcs

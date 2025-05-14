@@ -17,6 +17,10 @@ import { popper10 } from "../fakeData/popper10";
 import { popper11 } from "../fakeData/popper11";
 import { playNote } from "../audio/playNote";
 import * as Tone from "tone";
+import bassImg from "../svg/bassclef.svg";
+import trebleImg from "../svg/trebleclef.svg";
+import playBttn from "../svg/play.svg";
+import pauseBttn from "../svg/pause.svg";
 
 // also show the absolute thresh? doesn't that change every note?
 
@@ -392,17 +396,40 @@ export const Welcome = () => {
   return (
     <main className="flex items-center justify-center pt-16 pb-4">
       <div>
-        <h1>Music Visualization App</h1>
-        {/* <h2>Press 0-9 to play notes C4-E5 respectively</h2> */}
-        <h2>
+        <h1 className="text-2xl font-bold mb-2">Music Visualization App</h1>
+        <h2 className="text-lg mb-1">
           Press <strong>F</strong> to play Popper Etude
         </h2>
-        <h2>Press spacebar to play/pause</h2>
-        <h2>Currently {play ? "Playing" : "Paused"}</h2>
-        {/* <p>{new Date(curTime).toString()}</p> */}
+        <h2 className="text-lg mb-1 flex items-center gap-2">
+          Press <strong>Spacebar</strong> to play/pause
+          {play ? (
+            <img
+              src={pauseBttn}
+              alt="Currently playing"
+              width="25"
+              style={{
+                position: "relative",
+                left: "0px",
+                top: "0px",
+              }}
+            />
+          ) : (
+            <img
+              src={playBttn}
+              alt="Currently Paused"
+              width="25"
+              style={{
+                position: "relative",
+                left: "0px",
+                top: "0px",
+              }}
+            />
+          )}
+        </h2>
+
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <input type="range" onChange={handleZoomChange} />
-          <h2> {zoom}% zoom</h2>
+          <h2 className="text-lg mb-2"> {zoom}% zoom</h2>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <input
@@ -410,32 +437,57 @@ export const Welcome = () => {
             onChange={handleThreshChange}
             ref={threshInputRef}
           />
-          <h2> Attention: Top {arcThresh}%</h2>
+          <h2 className="text-lg mb-2"> Attention: Top {arcThresh}%</h2>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <div className="grid grid-cols-6 gap-2 w-full mb-4">
           {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((headNumber) => (
             <button
               key={headNumber}
               onClick={() => handleHeadChange(headNumber)}
               style={{
-                backgroundColor: "#a399d0",
                 padding: "5px 5px",
                 border: "3px solid white",
                 borderRadius: "10px",
                 cursor: "pointer",
+                backgroundColor: curHead === headNumber ? "#7465b8" : "#a399d0",
+                color: "#FFFFFF",
               }}
+              className="py-2 px-4 rounded font-semibold hover:brightness-110 transition"
             >
               Head {headNumber}
             </button>
           ))}
         </div>
-        <h2>Current head: {curHead}</h2>
-        <canvas
-          ref={canvasRef}
-          width="800"
-          style={{ border: "1px solid black" }}
-        />
+        <div style={{ position: "relative" }}>
+          <canvas
+            ref={canvasRef}
+            width="800"
+            style={{ border: "1px solid black" }}
+          />
+
+          <img
+            src={bassImg}
+            alt="error"
+            width="60"
+            style={{
+              position: "absolute",
+              left: "15px",
+              top: "215px",
+            }}
+          />
+
+          <img
+            src={trebleImg}
+            alt="error"
+            width="85"
+            style={{
+              position: "absolute",
+              left: "0px",
+              top: "115px",
+            }}
+          />
+        </div>
       </div>
     </main>
   );

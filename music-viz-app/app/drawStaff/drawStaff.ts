@@ -1,6 +1,3 @@
-// import svg file instead of fetching
-// don't put svg in public
-
 export const drawStaff = (
   canvas: HTMLCanvasElement,
   staffY: number,
@@ -34,31 +31,23 @@ export const drawStaff = (
   ctx.stroke();
 
   // draw clef
-  let svg = "../svg/trebleclef.svg";
-  let clefWidth = lineSpacing * 4;
-  let clefHeight = lineSpacing * 6;
-  let clefY = staffY - 0.5 * lineSpacing;
-  let clefX = 0;
+  // let clefWidth = lineSpacing * 4;
+  // let clefHeight = lineSpacing * 6;
+  // let clefY = staffY - 0.5 * lineSpacing;
+  // let clefX = 0;
 
-  if (clef === "bass") {
-    svg = "../svg/bassclef.svg";
-    clefWidth = lineSpacing * 3;
-    clefHeight = lineSpacing * 3.5;
-    clefY = staffY;
-    clefX = 10;
-  }
+  // let clefImg;
 
-  const img = new Image();
-  const svgBlob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
-  const url = URL.createObjectURL(svgBlob);
-
-  img.onload = () => {
-    console.log("draw clef");
-    ctx.drawImage(img, clefX, clefY, clefWidth, clefHeight);
-    URL.revokeObjectURL(url);
-  };
-  img.onerror = () => {
-    URL.revokeObjectURL(url);
-  };
-  img.src = url;
+  // if (clef === "bass") {
+  //   clefWidth = lineSpacing * 3;
+  //   clefHeight = lineSpacing * 3.5;
+  //   clefY = staffY;
+  //   clefX = 10;
+  //   clefImg = bassImg;
+  // } else {
+  //   clefImg = trebleImg;
+  // }
+  // if (clefImg) {
+  //   ctx.drawImage(clefImg, clefX, clefY, clefWidth, clefHeight);
+  // }
 };
