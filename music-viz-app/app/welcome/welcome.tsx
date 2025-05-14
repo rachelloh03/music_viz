@@ -16,8 +16,6 @@ import { popper9 } from "../fakeData/popper9";
 import { popper10 } from "../fakeData/popper10";
 import { popper11 } from "../fakeData/popper11";
 import { playNote } from "../audio/playNote";
-// import { startNote } from "../audio/startNote";
-// import { endNote } from "../audio/endNote";
 import * as Tone from "tone";
 
 // also show the absolute thresh? doesn't that change every note?
@@ -34,9 +32,7 @@ export const Welcome = () => {
   const [lastPausedTime, setLastPausedTime] = useState(getTime());
   const [lastPlayedTime, setLastPlayedTime] = useState(getTime());
   const [curHead, setCurHead] = useState(0);
-  // const [playedNotes, setPlayedNotes] = useState<Note[]>([]);
   const [lastPlayedNoteIndex, setLastPlayedNoteIndex] = useState(-1);
-  // const [startedNotes, setStartedNotes] = useState<Note[]>([]);
   const [lastFTime, setlastFTime] = useState(0);
 
   // list of data files for each head; append when I get more files
@@ -144,27 +140,6 @@ export const Welcome = () => {
         setLastPlayedNoteIndex(i);
       }
     }
-
-    // // attempt to play audio in real time
-    // for (let i = 0; i < notes.length; i++) {
-    //   const note = notes[i];
-    //   if (
-    //     curTime >= note.startTime &&
-    //     !startedNotes.includes(note) &&
-    //     synthRef.current
-    //   ) {
-    //     startNote(note, synthRef.current);
-    //     const newStartedNotes = [...startedNotes, note];
-    //     setStartedNotes(newStartedNotes);
-    //   } else if (
-    //     note.endTime &&
-    //     curTime >= note.endTime &&
-    //     startedNotes.includes(note) &&
-    //     synthRef.current
-    //   ) {
-    //     endNote(note, synthRef.current);
-    //   }
-    // }
   }, [curTime, notes, lastPlayedNoteIndex, setLastPlayedNoteIndex, playNote]);
 
   // get arc threshold slider value
@@ -224,9 +199,7 @@ export const Welcome = () => {
             (sum, weight) => sum + weight[1],
             0
           );
-
           const thresh = (arcThresh / 100) * weightSum;
-
           // store current sum of weights of arcs shown
           let curSum = 0;
           for (let j = 0; j < sortedWeights.length; j++) {
