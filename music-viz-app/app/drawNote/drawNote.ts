@@ -8,7 +8,7 @@ export const drawNote = (
   note: Note,
   curTime: number,
   zoom: number,
-  color: RegExpStringIterator
+  color: string
 ) => {
   const ctx = canvas.getContext("2d");
   if (!ctx) {
