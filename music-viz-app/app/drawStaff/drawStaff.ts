@@ -29,25 +29,4 @@ export const drawStaff = (
   ctx.lineWidth = 4;
   ctx.strokeStyle = "black";
   ctx.stroke();
-
-  // draw clef
-  // let clefWidth = lineSpacing * 4;
-  // let clefHeight = lineSpacing * 6;
-  // let clefY = staffY - 0.5 * lineSpacing;
-  // let clefX = 0;
-
-  // let clefImg;
-
-  // if (clef === "bass") {
-  //   clefWidth = lineSpacing * 3;
-  //   clefHeight = lineSpacing * 3.5;
-  //   clefY = staffY;
-  //   clefX = 10;
-  //   clefImg = bassImg;
-  // } else {
-  //   clefImg = trebleImg;
-  // }
-  // if (clefImg) {
-  //   ctx.drawImage(clefImg, clefX, clefY, clefWidth, clefHeight);
-  // }
 };

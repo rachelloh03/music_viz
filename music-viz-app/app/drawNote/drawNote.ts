@@ -32,14 +32,16 @@ export const drawNote = (
 
   // active notes are colored
   if (x >= canvas.width - noteWidth) {
-    ctx.strokeStyle = `rgba(163, 153, 208, ${alpha})`;
-    ctx.fillStyle = `rgba(163, 153, 208, ${alpha})`;
+    ctx.strokeStyle = `hsl(263 44%, 75%)`;
+    ctx.fillStyle = `hsl(263 44%, 75%)`;
   } else {
-    ctx.strokeStyle = `rgba(0, 0, 0, ${alpha})`;
-    ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
+    ctx.strokeStyle = `hsla(145, 0%, 0%, ${alpha})`;
+    ctx.fillStyle = `hsla(145, 0%, 0%, ${alpha})`;
   }
 
   if (y && x + noteWidth > 0) {
-    ctx.fillRect(x, y, noteWidth, lineSpacing);
+    ctx.roundRect(x, y, noteWidth, lineSpacing, 10);
+    ctx.fill();
+    ctx.beginPath();
   }
 };

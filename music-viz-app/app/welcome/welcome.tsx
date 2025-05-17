@@ -22,10 +22,8 @@ import trebleImg from "../svg/trebleclef.svg";
 import playBttn from "../svg/play.svg";
 import pauseBttn from "../svg/pause.svg";
 
-// also show the absolute thresh? doesn't that change every note?
-
 const getTime = () => {
-  return Date.now() * 0.5;
+  return Date.now() * 0.45;
 };
 
 export const Welcome = () => {
@@ -35,7 +33,7 @@ export const Welcome = () => {
   const [play, setPlay] = useState(true);
   const [lastPausedTime, setLastPausedTime] = useState(getTime());
   const [lastPlayedTime, setLastPlayedTime] = useState(getTime());
-  const [curHead, setCurHead] = useState(0);
+  const [curHeads, setCurHeads] = useState<number[]>([]);
   const [lastPlayedNoteIndex, setLastPlayedNoteIndex] = useState(-1);
   const [lastFTime, setlastFTime] = useState(0);
 
@@ -54,27 +52,44 @@ export const Welcome = () => {
     popper10,
     popper11,
   ];
-  const [curHeadFile, setCurHeadFile] = useState(popper0);
-  const firstFakeStartTime = curHeadFile[0].startTime;
+  // const [curHeadFile, setCurHeadFile] = useState(popper0);
+  const firstFakeStartTime = popper0[0].startTime;
 
-  // const [minWeight, setMinWeight] = useState(4.603590468832408e-7);
-  // const [maxWeight, setMaxWeight] = useState(0.000340308528393507);
-  // const [arcThresh, setArcThresh] = useState((minWeight + maxWeight) / 2);
+  const chosenColors = [
+    `hsl(353 100% 74.8%)`,
+    `hsl(0 63.2% 47%)`,
+    `hsl(19 100% 74.8%)`,
+    `hsl(40 87.8% 57.7%)`,
+    `hsl(49 100% 45%)`,
+    `hsl(124 63.2% 57.2%)`,
+    `hsl(162 63.2% 47%)`,
+    `hsl(195 63.2% 57.2%)`,
+    `hsl(231 87.8% 57.7%)`,
+    `hsl(240 53.3% 48.6%)`,
+    `hsl(263 44%, 60%)`,
+    `hsl(357 30.5% 37.2%)`,
+  ];
+
+  const colors = [
+    `hsl(353 100% 85%)`,
+    `hsl(0 63.2% 60%)`,
+    `hsl(19 100% 85%)`,
+    `hsl(40 87.8% 73%)`,
+    `hsl(49 100% 65%)`,
+    `hsl(124 63.2% 73%)`,
+    `hsl(162 63.2% 60%)`,
+    `hsl(195 63.2% 73%)`,
+    `hsl(231 87.8% 73%)`,
+    `hsl(240 53.3% 70%)`,
+    `hsl(263 44%, 75%)`,
+    `hsl(357 30.5% 52%)`,
+  ];
+
   const [arcThresh, setArcThresh] = useState(50);
   const threshInputRef = useRef<HTMLInputElement>(null);
 
   const synthRef = useRef<Tone.Synth | null>(null);
   let context: Tone.BaseContext;
-
-  // const colors = [
-  //   "#ffb3ba",
-  //   "#ffdfba",
-  //   "#ffffba",
-  //   "#baffc9",
-  //   "#bae1ff",
-  //   "#a399d0",
-  // ];
-
   const keyToPitch: { [key: string]: number } = {
     q: 40,
     w: 41,
@@ -146,25 +161,6 @@ export const Welcome = () => {
     }
   }, [curTime, notes, lastPlayedNoteIndex, setLastPlayedNoteIndex, playNote]);
 
-  // get arc threshold slider value
-  const getArcSliderVal = () => {
-    const val = threshInputRef.current?.value;
-    if (val) {
-      return val;
-    }
-  };
-
-  // set attention min / max weights based on curHeadFile
-  // useEffect(() => {
-  //   const weights = getMinMaxWeights(curHeadFile);
-  //   setMinWeight(weights[0]);
-  //   setMaxWeight(weights[1]);
-  //   const arcSliderVal = getArcSliderVal();
-  //   if (arcSliderVal) {
-  //     setArcThresh(((minWeight + maxWeight) * parseInt(arcSliderVal)) / 100);
-  //   }
-  // }, [curHeadFile, setMinWeight, setMaxWeight, curHead]);
-
   // draw staff, notes, and arcs
   useEffect(() => {
     canvas = canvasRef.current;
@@ -184,49 +180,54 @@ export const Welcome = () => {
         });
 
         // draw the arc from the current note to any previous notes that it is referring to
-        for (let i = 0; i < curHeadFile.length; i++) {
-          const curNote = {
-            pitch: curHeadFile[i].pitch,
-            startTime:
-              lastFTime + curHeadFile[i].startTime - firstFakeStartTime,
-            endTime: lastFTime + curHeadFile[i].endTime - firstFakeStartTime,
-          };
+        for (let k = 0; k < curHeads.length; k++) {
+          const head = curHeads[k];
+          const curHeadFile = headFiles[head];
+          const color = colors[head];
+          for (let i = 0; i < curHeadFile.length; i++) {
+            const curNote = {
+              pitch: curHeadFile[i].pitch,
+              startTime:
+                lastFTime + curHeadFile[i].startTime - firstFakeStartTime,
+              endTime: lastFTime + curHeadFile[i].endTime - firstFakeStartTime,
+            };
 
-          // sort attention weights in descending order
-          const indexedWeights = curHeadFile[i].attention.map(
-            (weight, i) => [i, weight] as [number, number]
-          );
-          const sortedWeights = indexedWeights.sort((a, b) => b[1] - a[1]);
+            // sort attention weights in descending order
+            const indexedWeights = curHeadFile[i].attention.map(
+              (weight, i) => [i, weight] as [number, number]
+            );
+            const sortedWeights = indexedWeights.sort((a, b) => b[1] - a[1]);
 
-          // calculate arc threshold value
-          const weightSum = sortedWeights.reduce(
-            (sum, weight) => sum + weight[1],
-            0
-          );
-          const thresh = (arcThresh / 100) * weightSum;
-          // store current sum of weights of arcs shown
-          let curSum = 0;
-          for (let j = 0; j < sortedWeights.length; j++) {
-            const noteIndex = sortedWeights[j][0];
-            const noteWeight = sortedWeights[j][1];
-            if (
-              noteIndex !== i &&
-              curSum + noteWeight < thresh &&
-              noteWeight !== 0.0
-            ) {
-              const pastNote = {
-                pitch: curHeadFile[noteIndex].pitch,
-                startTime:
-                  lastFTime +
-                  curHeadFile[noteIndex].startTime -
-                  firstFakeStartTime,
-                endTime:
-                  lastFTime +
-                  curHeadFile[noteIndex].endTime -
-                  firstFakeStartTime,
-              };
-              drawArc(canvas!, curNote, pastNote, curTime, zoom);
-              curSum += noteWeight;
+            // calculate arc threshold value
+            const weightSum = sortedWeights.reduce(
+              (sum, weight) => sum + weight[1],
+              0
+            );
+            const thresh = (arcThresh / 100) * weightSum;
+            // store current sum of weights of arcs shown
+            let curSum = 0;
+            for (let j = 0; j < sortedWeights.length; j++) {
+              const noteIndex = sortedWeights[j][0];
+              const noteWeight = sortedWeights[j][1];
+              if (
+                noteIndex !== i &&
+                curSum + noteWeight < thresh &&
+                noteWeight !== 0.0
+              ) {
+                const pastNote = {
+                  pitch: curHeadFile[noteIndex].pitch,
+                  startTime:
+                    lastFTime +
+                    curHeadFile[noteIndex].startTime -
+                    firstFakeStartTime,
+                  endTime:
+                    lastFTime +
+                    curHeadFile[noteIndex].endTime -
+                    firstFakeStartTime,
+                };
+                drawArc(canvas!, curNote, pastNote, curTime, zoom, color);
+                curSum += noteWeight;
+              }
             }
           }
         }
@@ -242,7 +243,7 @@ export const Welcome = () => {
     play,
     lastPausedTime,
     arcThresh,
-    curHeadFile,
+    curHeads,
     lastFTime,
   ]);
 
@@ -252,6 +253,7 @@ export const Welcome = () => {
 
     // play/pause toggle
     if (event.key == " ") {
+      event.preventDefault();
       if (play) {
         setLastPausedTime(curTime);
       } else {
@@ -263,7 +265,7 @@ export const Welcome = () => {
     // play fake notes
     if (event.key == "f") {
       if (play) {
-        const newPopper = curHeadFile.map((note) => {
+        const newPopper = headFiles[0].map((note) => {
           return {
             ...note,
             startTime: curTime + note.startTime - firstFakeStartTime,
@@ -350,47 +352,13 @@ export const Welcome = () => {
 
   // update chosen head
   const handleHeadChange = (head: number) => {
-    setCurHead(head);
-    setCurHeadFile(headFiles[head]);
-  };
-
-  const scale = (
-    input: number,
-    inLow: number,
-    inHigh: number,
-    outLow: number,
-    outHigh: number
-  ) => {
-    const val =
-      ((input - inLow) / (inHigh - inLow)) * (outHigh - outLow) + outLow;
-    return val;
-  };
-
-  // get min and max weights for a single head
-  const getMinMaxWeights = (
-    dataFile: {
-      pitch: number;
-      startTime: number;
-      endTime: number;
-      attention: number[];
-    }[]
-  ) => {
-    let maxWeight = 0;
-    let minWeight = 1;
-
-    for (let i = 0; i < dataFile.length; i++) {
-      const noteAttentions = dataFile[i].attention;
-      for (let j = 0; j < noteAttentions.length; j++) {
-        const weight = noteAttentions[j];
-        if (weight > maxWeight && i !== j) {
-          // i !== j so we don't include self attention
-          maxWeight = weight;
-        } else if (weight < minWeight && weight !== 0) {
-          minWeight = weight;
-        }
-      }
+    if (!curHeads.includes(head)) {
+      const newCurHeads = [...curHeads, head];
+      setCurHeads(newCurHeads);
+    } else {
+      const newCurHeads = curHeads.filter((num) => num !== head);
+      setCurHeads(newCurHeads);
     }
-    return [minWeight, maxWeight];
   };
 
   return (
@@ -450,8 +418,10 @@ export const Welcome = () => {
                 border: "3px solid white",
                 borderRadius: "10px",
                 cursor: "pointer",
-                backgroundColor: curHead === headNumber ? "#7465b8" : "#a399d0",
-                color: "#FFFFFF",
+                backgroundColor: curHeads.includes(headNumber)
+                  ? chosenColors[headNumber]
+                  : colors[headNumber],
+                color: curHeads.includes(headNumber) ? "black" : "white",
               }}
               className="py-2 px-4 rounded font-semibold hover:brightness-110 transition"
             >

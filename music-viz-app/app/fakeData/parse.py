@@ -7,7 +7,9 @@ def makeTxtFile(head):
 
     with open("app/fakeData/pitch_attentions_popper.json", 'r') as file:
         jsonData = json.load(file)
-        attentions = jsonData[head]["attentions"]
+        for item in jsonData:
+            if item["batch"] == 0 and item["layer"] == 11 and item["head"] == head:
+                attentions = item["attentions"]
 
     with open("app/fakeData/popper.txt","r") as file:
         for i, line in enumerate(file):

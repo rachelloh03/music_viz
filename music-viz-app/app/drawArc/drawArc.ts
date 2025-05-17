@@ -6,15 +6,16 @@ export const drawArc = (
   curNote: Note,
   pastNote: Note,
   curTime: number,
-  zoom: number
+  zoom: number,
+  color: string
 ) => {
   const ctx = canvas.getContext("2d");
   if (!ctx) {
     return;
   }
 
-  ctx.strokeStyle = "#a399d0";
-  ctx.fillStyle = "#a399d0";
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
 
   const speed = zoom / 100 + 0.01; // pixels/ms
   const x1 = canvas.width - (curTime - pastNote.startTime) * speed;
@@ -40,14 +41,9 @@ export const drawArc = (
     const endAngle = Math.atan2(y2 - circleY, x2 - circleX);
 
     ctx.beginPath();
-    ctx.arc(circleX, circleY, radius, startAngle, endAngle);
+    // curNoteWidth/2 to start arc at middle of note
+    // will need to change when using realtime since don't know middle of curNote
+    ctx.arc(circleX + curNoteWidth / 2, circleY, radius, startAngle, endAngle);
     ctx.stroke();
-
-    // uncomment if want to draw lines instead of arcs
-    // ctx.lineWidth = 3;
-    // ctx.beginPath();
-    // ctx.moveTo(x1, y1);
-    // ctx.lineTo(x2, y2);
-    // ctx.stroke();
   }
 };
