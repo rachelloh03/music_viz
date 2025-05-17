@@ -7,7 +7,8 @@ export const drawNote = (
   canvas: HTMLCanvasElement,
   note: Note,
   curTime: number,
-  zoom: number
+  zoom: number,
+  color: RegExpStringIterator
 ) => {
   const ctx = canvas.getContext("2d");
   if (!ctx) {
@@ -32,8 +33,8 @@ export const drawNote = (
 
   // active notes are colored
   if (x >= canvas.width - noteWidth) {
-    ctx.strokeStyle = `hsl(263 44%, 75%)`;
-    ctx.fillStyle = `hsl(263 44%, 75%)`;
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
   } else {
     ctx.strokeStyle = `hsla(145, 0%, 0%, ${alpha})`;
     ctx.fillStyle = `hsla(145, 0%, 0%, ${alpha})`;

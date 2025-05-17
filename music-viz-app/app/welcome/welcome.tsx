@@ -23,7 +23,7 @@ import playBttn from "../svg/play.svg";
 import pauseBttn from "../svg/pause.svg";
 
 const getTime = () => {
-  return Date.now() * 0.45;
+  return Date.now() * 0.5;
 };
 
 export const Welcome = () => {
@@ -176,7 +176,13 @@ export const Welcome = () => {
         drawStaff(canvas, canvas.height * 0.54, "bass"); // bass staff
 
         notes.forEach((note) => {
-          drawNote(canvas!, note, curTime, zoom);
+          let color;
+          if (curHeads.length > 0) {
+            color = colors[curHeads[curHeads.length - 1]];
+          } else {
+            color = "black";
+          }
+          drawNote(canvas!, note, curTime, zoom, color);
         });
 
         // draw the arc from the current note to any previous notes that it is referring to
@@ -245,6 +251,7 @@ export const Welcome = () => {
     arcThresh,
     curHeads,
     lastFTime,
+    zoom,
   ]);
 
   // detect when note is played (noteOn)
