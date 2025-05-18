@@ -52,8 +52,12 @@ export const Welcome = () => {
     popper10,
     popper11,
   ];
-  // const [curHeadFile, setCurHeadFile] = useState(popper0);
+
   const firstFakeStartTime = popper0[0].startTime;
+  const lastFakeEndTime = popper0[popper0.length - 1].endTime;
+
+  const [scrubPercentage, setScrubPercentage] = useState(0);
+  const scrubInputRef = useRef<HTMLInputElement>(null);
 
   const chosenColors = [
     `hsl(353 100% 74.8%)`,
@@ -125,16 +129,38 @@ export const Welcome = () => {
   useEffect(() => {
     let animId: number;
     const updateTime = () => {
+      let newTime;
       if (!play) {
-        setCurTime(lastPausedTime);
+        // paused
+        newTime = (scrubPercentage / 100) * lastFakeEndTime + lastFTime;
+        setLastPausedTime(newTime);
       } else {
-        setCurTime(getTime() - lastPlayedTime + lastPausedTime);
+        newTime = getTime() - lastPlayedTime + lastPausedTime;
+        // update scrub percentage automatically if playing
+        if (lastFTime > 0) {
+          // avoid jittering when scrub hits end of scroll bar
+          setScrubPercentage(
+            Math.min(((newTime - lastFTime) / lastFakeEndTime) * 100, 100)
+          );
+        }
       }
+      setCurTime(newTime);
       animId = requestAnimationFrame(updateTime);
     };
     updateTime();
     return () => cancelAnimationFrame(animId);
-  }, [setCurTime, lastPausedTime, play, lastPlayedTime]);
+  }, [
+    setCurTime,
+    lastPausedTime,
+    play,
+    lastPlayedTime,
+    curTime,
+    lastFTime,
+    lastFakeEndTime,
+    scrubPercentage,
+    setScrubPercentage,
+    lastFTime,
+  ]);
 
   // play audio
   useEffect(() => {
@@ -143,7 +169,7 @@ export const Welcome = () => {
       synthRef.current = new Tone.Synth().toDestination();
     }
     context = Tone.getContext();
-    if (context.state !== "running") {
+    if (context.state !== "running" && play) {
       Tone.start();
     }
     for (let i = 0; i < notes.length; i++) {
@@ -153,7 +179,8 @@ export const Welcome = () => {
         i > lastPlayedNoteIndex &&
         synthRef.current &&
         note.endTime &&
-        note.pitch
+        note.pitch &&
+        play
       ) {
         playNote(note, synthRef.current);
         setLastPlayedNoteIndex(i);
@@ -262,8 +289,12 @@ export const Welcome = () => {
     if (event.key == " ") {
       event.preventDefault();
       if (play) {
+        // going from play to pause
         setLastPausedTime(curTime);
+        // cancel all previously scheduled notes
+        Tone.Transport.cancel();
       } else {
+        // going from pause to play
         setLastPlayedTime(getTime());
       }
       setPlay(!play);
@@ -271,34 +302,34 @@ export const Welcome = () => {
 
     // play fake notes
     if (event.key == "f") {
-      if (play) {
-        const newPopper = headFiles[0].map((note) => {
-          return {
-            ...note,
-            startTime: curTime + note.startTime - firstFakeStartTime,
-            endTime: curTime + note.endTime - firstFakeStartTime,
-          };
-        });
-        const newNotes = [...notes, ...newPopper];
-        setNotes(newNotes);
-        setlastFTime(curTime);
-      }
-    } else {
-      try {
-        // append new note to notesAndTime.notes and set pitch and startTime
-        const startTime = curTime;
-        const newNote = {
-          pitch: getPitch(event),
-          startTime: startTime,
-          endTime: null,
+      // if (play) {
+      const newPopper = headFiles[0].map((note) => {
+        return {
+          ...note,
+          startTime: curTime + note.startTime - firstFakeStartTime,
+          endTime: curTime + note.endTime - firstFakeStartTime,
         };
-
-        const newNotes = [...notes, newNote];
-        setNotes(newNotes);
-      } catch {
-        console.log("key must be a number 0 through 9");
-      }
+      });
+      const newNotes = [...notes, ...newPopper];
+      setNotes(newNotes);
+      setlastFTime(curTime);
     }
+    // } else {
+    //   try {
+    //     // append new note to notesAndTime.notes and set pitch and startTime
+    //     const startTime = curTime;
+    //     const newNote = {
+    //       pitch: getPitch(event),
+    //       startTime: startTime,
+    //       endTime: null,
+    //     };
+
+    //     const newNotes = [...notes, newNote];
+    //     setNotes(newNotes);
+    //   } catch {
+    //     console.log("key must be a number 0 through 9");
+    //   }
+    // }
   };
 
   // detect when note ends (noteOff)
@@ -357,7 +388,20 @@ export const Welcome = () => {
     setArcThresh(newArcThresh);
   };
 
-  // update chosen head
+  // scrubbing
+  const handleScrubChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const percentage = Number(event.target.value);
+    setScrubPercentage(percentage);
+
+    // cancel all previously scheduled notes
+    Tone.Transport.cancel();
+    // update last "played" note index so we resume audio from new scrub location
+    const newTime = (percentage / 100) * lastFakeEndTime + lastFTime;
+    const i = notes.findIndex((n) => n.startTime > newTime);
+    setLastPlayedNoteIndex(i !== -1 ? i - 1 : notes.length);
+  };
+
+  // update chosen heads
   const handleHeadChange = (head: number) => {
     if (!curHeads.includes(head)) {
       const newCurHeads = [...curHeads, head];
@@ -404,7 +448,7 @@ export const Welcome = () => {
 
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <input type="range" onChange={handleZoomChange} />
-          <h2 className="text-lg mb-2"> {zoom}% zoom</h2>
+          <h2 className="text-lg"> {zoom}% zoom</h2>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <input
@@ -412,7 +456,7 @@ export const Welcome = () => {
             onChange={handleThreshChange}
             ref={threshInputRef}
           />
-          <h2 className="text-lg mb-2"> Attention: Top {arcThresh}%</h2>
+          <h2 className="text-lg"> Attention: Top {arcThresh}%</h2>
         </div>
 
         <div className="grid grid-cols-6 gap-2 w-full mb-4">
@@ -463,6 +507,16 @@ export const Welcome = () => {
               left: "0px",
               top: "115px",
             }}
+          />
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <h2 className="text-lg"> Scroll to Scrub</h2>
+          <input
+            type="range"
+            onChange={handleScrubChange}
+            ref={scrubInputRef}
+            className="w-150"
+            value={scrubPercentage}
           />
         </div>
       </div>
