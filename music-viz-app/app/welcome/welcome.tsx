@@ -125,6 +125,8 @@ export const Welcome = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   let canvas: HTMLCanvasElement | null;
 
+  const [fancyMode, setFancyMode] = useState(false);
+
   // continuously update curTime
   useEffect(() => {
     let animId: number;
@@ -216,7 +218,10 @@ export const Welcome = () => {
         for (let k = 0; k < curHeads.length; k++) {
           const head = curHeads[k];
           const curHeadFile = headFiles[head];
-          const color = colors[head];
+          const color_split = colors[head].split(" ");
+          const og_val = parseInt(color_split[2]);
+
+          let color = colors[head];
           for (let i = 0; i < curHeadFile.length; i++) {
             const curNote = {
               pitch: curHeadFile[i].pitch,
@@ -258,6 +263,19 @@ export const Welcome = () => {
                     curHeadFile[noteIndex].endTime -
                     firstFakeStartTime,
                 };
+                const new_val = (
+                  og_val - j * 5 > 30 ? og_val - j * 5 : 30
+                ).toString();
+                if (fancyMode) {
+                  color =
+                    color_split[0] +
+                    " " +
+                    color_split[1] +
+                    " " +
+                    new_val +
+                    "%)";
+                }
+
                 drawArc(canvas!, curNote, pastNote, curTime, zoom, color);
                 curSum += noteWeight;
               }
@@ -330,6 +348,10 @@ export const Welcome = () => {
     //     console.log("key must be a number 0 through 9");
     //   }
     // }
+
+    if (event.key == "w") {
+      setFancyMode(!fancyMode);
+    }
   };
 
   // detect when note ends (noteOff)
@@ -445,6 +467,10 @@ export const Welcome = () => {
             />
           )}
         </h2>
+        <h2 className="text-lg mb-1">
+          Press <strong>W</strong> to turn on/off fancy arcs (lightness is
+          proportional to weight)
+        </h2>
 
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <input type="range" onChange={handleZoomChange} />
@@ -458,7 +484,6 @@ export const Welcome = () => {
           />
           <h2 className="text-lg"> Attention: Top {arcThresh}%</h2>
         </div>
-
         <div className="grid grid-cols-6 gap-2 w-full mb-4">
           {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((headNumber) => (
             <button

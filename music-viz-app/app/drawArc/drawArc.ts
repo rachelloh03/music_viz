@@ -13,7 +13,7 @@ export const drawArc = (
   if (!ctx) {
     return;
   }
-
+  // console.log(color);
   ctx.strokeStyle = color;
   ctx.fillStyle = color;
 
