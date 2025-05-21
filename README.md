@@ -7,3 +7,6 @@ The visualization aims to answer the following questions:
 - How is the AI reacting to the user in real-time?
 
 The app is currently just on localhost. npm run dev to test it out yourself!
+
+Screenshot of what the app looks like:
+<img width="667" alt="Screen Shot 2025-05-21 at 5 25 07 PM" src="https://github.com/user-attachments/assets/0dfbc391-0086-42c1-908a-9552ec12067b" />
