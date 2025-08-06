@@ -24,7 +24,7 @@ export const getY = (pitch: number, canvas: HTMLCanvasElement) => {
   const noteHeight = lineSpacing;
 
   let y;
-  if (pitchIndex) {
+  if (pitchIndex !== undefined) {
     const key = pitchIndex - 11;
     y = staffY + 4 * lineSpacing + ((3 - key) * lineSpacing - noteHeight) / 2;
   }
