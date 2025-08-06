@@ -236,22 +236,20 @@ export const Welcome = () => {
             );
             const sortedWeights = indexedWeights.sort((a, b) => b[1] - a[1]);
 
-            // calculate arc threshold value
-            const weightSum = sortedWeights.reduce(
-              (sum, weight) => sum + weight[1],
-              0
+            const nonZeroWeights = sortedWeights.filter(
+              ([_, weight]) => weight !== 0.0
             );
-            const thresh = (arcThresh / 100) * weightSum;
-            // store current sum of weights of arcs shown
-            let curSum = 0;
-            for (let j = 0; j < sortedWeights.length; j++) {
-              const noteIndex = sortedWeights[j][0];
-              const noteWeight = sortedWeights[j][1];
-              if (
-                noteIndex !== i &&
-                curSum + noteWeight < thresh &&
-                noteWeight !== 0.0
-              ) {
+            // calculate num non-zero weights to show
+            const numWeightsToShow = Math.round(
+              (arcThresh / 100) * nonZeroWeights.length
+            );
+            // store num non-zero weights shown so far
+            let weightsSoFar = 0;
+            // start at j = 1 to exclude starting token
+            for (let j = 1; j < nonZeroWeights.length; j++) {
+              const noteIndex = nonZeroWeights[j][0];
+              // exclude self-attention
+              if (noteIndex !== i + 1 && weightsSoFar < numWeightsToShow) {
                 const pastNote = {
                   pitch: curHeadFile[noteIndex].pitch,
                   startTime:
@@ -277,9 +275,54 @@ export const Welcome = () => {
                 }
 
                 drawArc(canvas!, curNote, pastNote, curTime, zoom, color);
-                curSum += noteWeight;
+                weightsSoFar += 1;
               }
             }
+
+            // // calculate arc threshold value
+            // const weightSum = sortedWeights.reduce(
+            //   (sum, weight) => sum + weight[1],
+            //   0
+            // );
+            // const thresh = (arcThresh / 100) * weightSum;
+            // // store current sum of weights of arcs shown
+            // let curSum = 0;
+            // for (let j = 0; j < sortedWeights.length; j++) {
+            //   const noteIndex = sortedWeights[j][0];
+            //   const noteWeight = sortedWeights[j][1];
+            //   if (
+            //     noteIndex !== i &&
+            //     curSum + noteWeight < thresh &&
+            //     noteWeight !== 0.0
+            //   ) {
+            //     const pastNote = {
+            //       pitch: curHeadFile[noteIndex].pitch,
+            //       startTime:
+            //         lastFTime +
+            //         curHeadFile[noteIndex].startTime -
+            //         firstFakeStartTime,
+            //       endTime:
+            //         lastFTime +
+            //         curHeadFile[noteIndex].endTime -
+            //         firstFakeStartTime,
+            //     };
+            //     const new_val = (
+            //       og_val - j * 5 > 30 ? og_val - j * 5 : 30
+            //     ).toString();
+            //     if (fancyMode) {
+            //       color =
+            //         color_split[0] +
+            //         " " +
+            //         color_split[1] +
+            //         " " +
+            //         new_val +
+            //         "%)";
+            //     }
+
+            //     drawArc(canvas!, curNote, pastNote, curTime, zoom, color);
+            //     curSum += noteWeight;
+            //   }
+            // }
           }
         }
       }
