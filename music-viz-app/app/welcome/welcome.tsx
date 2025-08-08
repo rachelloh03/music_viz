@@ -480,7 +480,7 @@ export const Welcome = () => {
   return (
     <main className="flex items-center justify-center pt-16 pb-4">
       <div>
-        <h1 className="text-2xl font-bold mb-2">Music Visualization App</h1>
+        <h1 className="text-2xl font-bold mb-2">MusicViz</h1>
         <h2 className="text-lg mb-1">
           Press <strong>F</strong> to play Popper Etude
         </h2>
